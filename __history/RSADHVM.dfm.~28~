@@ -1,0 +1,269 @@
+object Form_Main: TForm_Main
+  Left = 0
+  Top = 0
+  Caption = 
+    'RSA-Diffie-Hellman and Vigenere-Multiplicative Cipher Image Cryp' +
+    'tography'
+  ClientHeight = 640
+  ClientWidth = 1080
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -16
+  Font.Name = 'Segoe UI'
+  Font.Style = [fsBold]
+  Position = poScreenCenter
+  DesignSize = (
+    1080
+    640)
+  TextHeight = 21
+  object Shape_TopLine: TShape
+    Left = 8
+    Top = 48
+    Width = 1064
+    Height = 4
+    Anchors = [akLeft, akTop, akRight]
+    Brush.Color = clBlack
+  end
+  object StaticText_Title: TStaticText
+    Left = 8
+    Top = 8
+    Width = 917
+    Height = 34
+    Caption = 
+      'RSA-Diffie-Hellman and Vigenere-Multiplicative Cipher for Image ' +
+      'Encryption and Decryption'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 0
+  end
+  object Panel_Sidebar: TPanel
+    Left = 8
+    Top = 58
+    Width = 105
+    Height = 574
+    Anchors = [akLeft, akTop, akBottom]
+    TabOrder = 1
+    object SpeedButton_Encryption: TSpeedButton
+      Left = 0
+      Top = 0
+      Width = 105
+      Height = 33
+      Caption = 'Encryption'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object SpeedButton_Decryption: TSpeedButton
+      Left = 0
+      Top = 31
+      Width = 105
+      Height = 33
+      Caption = 'Decryption'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+  end
+  object GroupBox_Encryption: TGroupBox
+    Left = 119
+    Top = 58
+    Width = 953
+    Height = 574
+    Caption = 'Encryption'
+    TabOrder = 2
+    object SpeedButton_Encrypt: TSpeedButton
+      Left = 848
+      Top = 48
+      Width = 89
+      Height = 29
+      Caption = 'Encrypt'
+    end
+    object SpeedButton_Reset: TSpeedButton
+      Left = 848
+      Top = 83
+      Width = 89
+      Height = 29
+      Caption = 'Reset'
+    end
+    object GroupBox_InputKey: TGroupBox
+      Left = 0
+      Top = 24
+      Width = 842
+      Height = 113
+      Caption = 'Input Key'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 0
+      object Label_p1: TLabel
+        Left = 16
+        Top = 24
+        Width = 23
+        Height = 21
+        Caption = 'p1:'
+      end
+      object Label_p2: TLabel
+        Left = 16
+        Top = 59
+        Width = 23
+        Height = 21
+        Caption = 'p2:'
+      end
+      object Label_q1: TLabel
+        Left = 272
+        Top = 24
+        Width = 23
+        Height = 21
+        Caption = 'q1:'
+      end
+      object Label_q2: TLabel
+        Left = 272
+        Top = 59
+        Width = 23
+        Height = 21
+        Caption = 'q2:'
+      end
+      object Label_VigenereKey: TLabel
+        Left = 552
+        Top = 24
+        Width = 105
+        Height = 21
+        Caption = 'Vigenere Key:'
+      end
+      object SpeedButton1: TSpeedButton
+        Left = 628
+        Top = 83
+        Width = 201
+        Height = 22
+        Caption = 'Save input key to .txt file'
+      end
+      object Edit_p2: TEdit
+        Left = 45
+        Top = 59
+        Width = 121
+        Height = 29
+        TabOrder = 1
+        OnChange = Edit_p2Change
+        OnKeyPress = Edit_p2KeyPress
+      end
+      object Edit_q1: TEdit
+        Left = 301
+        Top = 24
+        Width = 121
+        Height = 29
+        TabOrder = 2
+        OnChange = Edit_q1Change
+        OnKeyPress = Edit_q1KeyPress
+      end
+      object Edit_q2: TEdit
+        Left = 301
+        Top = 59
+        Width = 121
+        Height = 29
+        TabOrder = 3
+        OnChange = Edit_q2Change
+        OnKeyPress = Edit_q2KeyPress
+      end
+      object Edit_VigenereKey: TEdit
+        Left = 552
+        Top = 51
+        Width = 281
+        Height = 29
+        TabOrder = 4
+      end
+      object Edit_p1: TEdit
+        Left = 45
+        Top = 24
+        Width = 121
+        Height = 29
+        TabOrder = 0
+        OnChange = Edit_p1Change
+        OnKeyPress = Edit_p1KeyPress
+      end
+      object StaticText_NumOnly: TStaticText
+        Left = 16
+        Top = 94
+        Width = 227
+        Height = 17
+        Caption = 'p1, p2, q1, and q2 inputs are numbers only'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 5
+      end
+      object StaticText_p1Warning: TStaticText
+        Left = 174
+        Top = 28
+        Width = 80
+        Height = 21
+        Caption = 'Empty input'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 6
+      end
+      object StaticText_p2Warning: TStaticText
+        Left = 174
+        Top = 63
+        Width = 80
+        Height = 21
+        Caption = 'Empty input'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 7
+      end
+      object StaticText_q1Warning: TStaticText
+        Left = 432
+        Top = 29
+        Width = 80
+        Height = 21
+        Caption = 'Empty input'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 8
+      end
+      object StaticText_q2Warning: TStaticText
+        Left = 432
+        Top = 63
+        Width = 80
+        Height = 21
+        Caption = 'Empty input'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 9
+      end
+    end
+  end
+end

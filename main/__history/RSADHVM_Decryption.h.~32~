@@ -1,0 +1,102 @@
+//---------------------------------------------------------------------------
+
+#ifndef RSADHVM_DecryptionH
+#define RSADHVM_DecryptionH
+//---------------------------------------------------------------------------
+#include <System.Classes.hpp>
+#include <Vcl.Controls.hpp>
+#include <Vcl.StdCtrls.hpp>
+#include <Vcl.Forms.hpp>
+#include <Data.DB.hpp>
+#include <Datasnap.DBClient.hpp>
+#include <Vcl.Buttons.hpp>
+#include <Vcl.ComCtrls.hpp>
+#include <Vcl.DBGrids.hpp>
+#include <Vcl.Dialogs.hpp>
+#include <Vcl.ExtCtrls.hpp>
+#include <Vcl.ExtDlgs.hpp>
+#include <Vcl.Grids.hpp>
+//---------------------------------------------------------------------------
+class TForm_Main : public TForm
+{
+__published:	// IDE-managed Components
+	TShape *Shape_TopLine;
+	TGroupBox *GroupBox_HowToUse;
+	TRichEdit *RichEdit1;
+	TGroupBox *GroupBox_Decryption;
+	TSpeedButton *SpeedButton_Decrypt;
+	TSpeedButton *SpeedButton_ResetAll;
+	TLabel *Label_Runtime;
+	TLabel *Label_ms;
+	TGroupBox *GroupBox_InputKey;
+	TLabel *Label_VigenereKey;
+	TSpeedButton *SpeedButton_SaveKey;
+	TSpeedButton *SpeedButton_ResetKey;
+	TEdit *Edit_VigenereKey;
+	TGroupBox *GroupBox_InputImage;
+	TSpeedButton *SpeedButton_BrowseImage;
+	TSpeedButton *SpeedButton_ResetInputImage;
+	TDBGrid *DBGrid1;
+	TPanel *Panel1;
+	TImage *Image_Input;
+	TGroupBox *GroupBox_OutputImage;
+	TSpeedButton *SpeedButton_SaveImage;
+	TSpeedButton *SpeedButton_OutputImage;
+	TImage *Image_OutputSave;
+	TDBGrid *DBGrid2;
+	TPanel *Panel2;
+	TImage *Image_Output;
+	TGroupBox *GroupBox_Calculation;
+	TLabel *Label18;
+	TSpeedButton *SpeedButton_Calculation;
+	TStaticText *StaticText_Title;
+	TPanel *Panel_Sidebar;
+	TSpeedButton *SpeedButton_MenuDecryption;
+	TSpeedButton *SpeedButton_HowToUse;
+	TProgressBar *ProgressBar1;
+	TStaticText *StaticText_Name;
+	TSaveDialog *SaveDialog_InputKey;
+	TDataSource *DataSource1;
+	TClientDataSet *ClientDataSet1;
+	TDataSource *DataSource2;
+	TClientDataSet *ClientDataSet2;
+	TOpenPictureDialog *OpenPictureDialog1;
+	TSaveDialog *SaveDialog_Calculation;
+	TSavePictureDialog *SavePictureDialog1;
+	TLabel *Label17;
+	TEdit *Edit_sK;
+	TMemo *Memo_VkDebug;
+	TLabel *Label1;
+	TEdit *Edit_InvsK;
+	TLabel *Label2;
+	TEdit *Edit_d;
+	TLabel *Label3;
+	TEdit *Edit_n;
+    void __fastcall FormCreate(TObject *Sender);
+	void __fastcall CheckEdits();
+	void __fastcall Edit_sKKeyPress(TObject *Sender, System::WideChar &Key);
+	void __fastcall Edit_sKChange(TObject *Sender);
+	void __fastcall Edit_VigenereKeyChange(TObject *Sender);
+	void __fastcall SpeedButton_SaveKeyClick(TObject *Sender);
+	void __fastcall SpeedButton_MenuDecryptionClick(TObject *Sender);
+	void __fastcall SpeedButton_HowToUseClick(TObject *Sender);
+	void __fastcall SpeedButton_ResetKeyClick(TObject *Sender);
+	void __fastcall SpeedButton_ResetInputImageClick(TObject *Sender);
+	void __fastcall SpeedButton_OutputImageClick(TObject *Sender);
+	void __fastcall SpeedButton_ResetAllClick(TObject *Sender);
+	void __fastcall SpeedButton_BrowseImageClick(TObject *Sender);
+	void __fastcall SpeedButton_SaveImageClick(TObject *Sender);
+	void __fastcall SpeedButton_CalculationClick(TObject *Sender);
+	void __fastcall SpeedButton_DecryptClick(TObject *Sender);
+	void __fastcall Edit_dChange(TObject *Sender);
+	void __fastcall Edit_nChange(TObject *Sender);
+	void __fastcall Edit_dKeyPress(TObject *Sender, System::WideChar &Key);
+private:	// User declarations
+public:		// User declarations
+	__fastcall TForm_Main(TComponent* Owner);
+    String __fastcall GenerateVk(String Vs, int NumOfPix);
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TForm_Main *Form_Main;
+//---------------------------------------------------------------------------
+#endif

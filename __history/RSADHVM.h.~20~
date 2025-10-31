@@ -1,0 +1,53 @@
+//---------------------------------------------------------------------------
+
+#ifndef RSADHVMH
+#define RSADHVMH
+//---------------------------------------------------------------------------
+#include <System.Classes.hpp>
+#include <Vcl.Controls.hpp>
+#include <Vcl.StdCtrls.hpp>
+#include <Vcl.Forms.hpp>
+#include <Vcl.ExtCtrls.hpp>
+#include <Vcl.Buttons.hpp>
+//---------------------------------------------------------------------------
+class TForm_Main : public TForm
+{
+__published:	// IDE-managed Components
+	TStaticText *StaticText_Title;
+	TShape *Shape_TopLine;
+	TPanel *Panel_Sidebar;
+	TSpeedButton *SpeedButton_Encryption;
+	TSpeedButton *SpeedButton_Decryption;
+	TGroupBox *GroupBox_Encryption;
+	TGroupBox *GroupBox_InputKey;
+	TLabel *Label_p1;
+	TLabel *Label_p2;
+	TEdit *Edit_p2;
+	TLabel *Label_q1;
+	TEdit *Edit_q1;
+	TLabel *Label_q2;
+	TEdit *Edit_q2;
+	TLabel *Label_VigenereKey;
+	TEdit *Edit_VigenereKey;
+	TSpeedButton *SpeedButton_Encrypt;
+	TSpeedButton *SpeedButton_Reset;
+	TEdit *Edit_p1;
+	TStaticText *StaticText_NumOnly;
+	TStaticText *StaticText_p1Warning;
+	TStaticText *StaticText_p2Warning;
+	TStaticText *StaticText_q1Warning;
+	TStaticText *StaticText_q2Warning;
+	void __fastcall Edit_p1KeyPress(TObject *Sender, System::WideChar &Key);
+	void __fastcall Edit_p2KeyPress(TObject *Sender, System::WideChar &Key);
+	void __fastcall Edit_q1KeyPress(TObject *Sender, System::WideChar &Key);
+	void __fastcall Edit_q2KeyPress(TObject *Sender, System::WideChar &Key);
+	void __fastcall Edit_p1Change(TObject *Sender);
+	void __fastcall Edit_p2Change(TObject *Sender);
+private:	// User declarations
+public:		// User declarations
+	__fastcall TForm_Main(TComponent* Owner);
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TForm_Main *Form_Main;
+//---------------------------------------------------------------------------
+#endif

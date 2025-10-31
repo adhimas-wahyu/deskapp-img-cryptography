@@ -1,0 +1,5 @@
+===== Input Key =====
+Encrypted sK = 242
+d = 3893
+n = 5141
+Vigenere Key = key

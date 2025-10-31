@@ -1,0 +1,589 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "RSADHVM_Decryption.h"
+
+using namespace std;
+
+#include <stdlib.h>
+#include <math.h>
+#include <random>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <System.SysUtils.hpp>
+#include <Vcl.Imaging.jpeg.hpp>
+#include <Graphics.hpp>
+
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm_Main *Form_Main;
+__int64 Image_Width;
+__int64 Image_Height;
+//---------------------------------------------------------------------------
+__fastcall TForm_Main::TForm_Main(TComponent* Owner)
+	: TForm(Owner)
+{
+    //DBGrid for input image
+	ClientDataSet1->FieldDefs->Add("X", ftInteger);
+	ClientDataSet1->FieldDefs->Add("Y", ftInteger);
+	ClientDataSet1->FieldDefs->Add("R", ftInteger);
+	ClientDataSet1->FieldDefs->Add("G", ftInteger);
+	ClientDataSet1->FieldDefs->Add("B", ftInteger);
+	ClientDataSet1->CreateDataSet();
+	DataSource1->DataSet = ClientDataSet1;
+	DBGrid1->DataSource = DataSource1;
+
+	//DBGrid for output image
+	ClientDataSet2->FieldDefs->Add("X", ftInteger);
+	ClientDataSet2->FieldDefs->Add("Y", ftInteger);
+	ClientDataSet2->FieldDefs->Add("R", ftInteger);
+	ClientDataSet2->FieldDefs->Add("G", ftInteger);
+	ClientDataSet2->FieldDefs->Add("B", ftInteger);
+	ClientDataSet2->CreateDataSet();
+	DataSource2->DataSet = ClientDataSet2;
+	DBGrid2->DataSource = DataSource2;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::FormCreate(TObject *Sender)
+{
+	//Maximized window
+	Form_Main->WindowState = wsMaximized;
+
+	//Max length input
+	Edit_sK->MaxLength = 10;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::CheckEdits()
+{
+	SpeedButton_Decrypt->Enabled = !Edit_enc_sK->Text.IsEmpty() && !Edit_VigenereKey->Text.IsEmpty() && !Edit_d->Text.IsEmpty() && !Edit_n->Text.IsEmpty();
+	SpeedButton_SaveKey->Enabled = !Edit_enc_sK->Text.IsEmpty() && !Edit_VigenereKey->Text.IsEmpty() && !Edit_d->Text.IsEmpty() && !Edit_n->Text.IsEmpty();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_enc_sKKeyPress(TObject *Sender, System::WideChar &Key)
+{
+	if (!isdigit(Key) && Key != '\b') // Allow digits and backspace
+	{
+		Key = 0; // Discard the key press
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_dKeyPress(TObject *Sender, System::WideChar &Key)
+{
+	if (!isdigit(Key) && Key != '\b') // Allow digits and backspace
+	{
+		Key = 0; // Discard the key press
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_nKeyPress(TObject *Sender, System::WideChar &Key)
+{
+	if (!isdigit(Key) && Key != '\b') // Allow digits and backspace
+	{
+		Key = 0; // Discard the key press
+	}
+}
+//---------------------------------------------------------------------------
+
+__int64 ExtendedGCD(__int64 a, __int64 b, __int64& x, __int64& y) {
+	if (a == 0) {
+		x = 0;
+		y = 1;
+		return b;
+	}
+
+	__int64 x1, y1;
+	__int64 gcd = ExtendedGCD(b % a, a, x1, y1);
+
+	x = y1 - (b / a) * x1;
+	y = x1;
+
+	return gcd;
+}
+//---------------------------------------------------------------------------
+
+__int64 ModInverse(__int64 a, __int64 m) {
+    __int64 x, y;
+    __int64 gcd = ExtendedGCD(a, m, x, y);
+
+    if (gcd != 1) {
+		return -1; // Inverse doesn't exist
+    } else {
+        return (x % m + m) % m; // Ensure positive result
+    }
+}
+//---------------------------------------------------------------------------
+
+__int64 ModPow(__int64 base, __int64 exponent, __int64 modulus) {
+	__int64 result = 1;
+	base = base % modulus; // Update base if it's larger than or equal to modulus
+
+	if (base == 0) {
+		return 0; // In case base is 0
+	}
+
+	while (exponent > 0) {
+		// If exponent is odd, multiply base with result
+		if (exponent & 1)
+			result = (result * base) % modulus;
+
+		// exponent must be even now
+		exponent = exponent >> 1; // exponent = exponent/2
+		base = (base * base) % modulus;
+	}
+	return result;
+}
+//---------------------------------------------------------------------------
+
+String __fastcall TForm_Main::GenerateVk(String Vs, int NumOfPix)
+{
+	if (Vs.IsEmpty()) {
+		throw invalid_argument("Vigenere key cannot be empty!");
+	}
+
+	String Vk = "";
+	int VsLength = Vs.Length(); // Store the length of Vs
+
+	for (int i = 0; i < NumOfPix; ++i) {
+		Vk += Vs[i % VsLength + 1]; // Use modulo to cycle through Vs
+	}
+
+	return Vk;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_enc_sKChange(TObject *Sender)
+{
+    CheckEdits();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_VigenereKeyChange(TObject *Sender)
+{
+	CheckEdits();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_dChange(TObject *Sender)
+{
+    CheckEdits();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::Edit_nChange(TObject *Sender)
+{
+	CheckEdits();
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm_Main::SpeedButton_SaveKeyClick(TObject *Sender)
+{
+    SaveDialog_InputKey->Title = "Save Input Key File";
+    SaveDialog_InputKey->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+	SaveDialog_InputKey->DefaultExt = ".txt";
+
+	if (SaveDialog_InputKey->Execute()) {
+		String filePath = SaveDialog_InputKey->FileName.c_str();
+
+		ofstream keyFile(filePath.c_str());
+
+		if (keyFile.is_open()) {
+			keyFile << "===== Input Key =====" << endl;
+			keyFile << "sK = " << AnsiString(Edit_sK->Text.c_str()) << endl;
+			keyFile << "Vigenere Key = " << AnsiString(Edit_VigenereKey->Text.c_str()) << endl;
+			keyFile.close();
+
+			ShowMessage("Input key saved to " + String(filePath.c_str()));
+		} else {
+			ShowMessage("Error opening file!");
+		}
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_MenuDecryptionClick(TObject *Sender)
+{
+	if (GroupBox_Decryption->Visible == false && GroupBox_HowToUse->Visible == true) {
+		   GroupBox_Decryption->Visible = true;
+		   GroupBox_HowToUse->Visible = false;
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_HowToUseClick(TObject *Sender)
+{
+	if (GroupBox_Decryption->Visible == true && GroupBox_HowToUse->Visible == false) {
+		   GroupBox_Decryption->Visible = false;
+		   GroupBox_HowToUse->Visible = true;
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_ResetKeyClick(TObject *Sender)
+{
+    //Reset read only input
+	Edit_sK->ReadOnly = false;
+	Edit_VigenereKey->ReadOnly = false;
+	Edit_d->ReadOnly = false;
+	Edit_n->ReadOnly = false;
+
+	//Reset input
+	Edit_sK->Text = "";
+	Edit_VigenereKey->Text = "";
+	Edit_d->Text = "";
+	Edit_n->Text = "";
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_ResetInputImageClick(TObject *Sender)
+{
+    //Reset image
+	Image_Input->Picture = NULL;
+
+	//Reset DBgrid
+	ClientDataSet1->Active = true;
+	if(ClientDataSet1->CanModify) {
+			ClientDataSet1->EmptyDataSet();
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_OutputImageClick(TObject *Sender)
+{
+    //Reset image
+	Image_Output->Picture = NULL;
+
+	//Reset DBgrid
+	ClientDataSet2->Active = true;
+	if(ClientDataSet2->CanModify) {
+			ClientDataSet2->EmptyDataSet();
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_ResetAllClick(TObject *Sender)
+{
+    //Reset read only input
+	Edit_enc_sK->ReadOnly = false;
+	Edit_VigenereKey->ReadOnly = false;
+	Edit_d->ReadOnly = false;
+	Edit_n->ReadOnly = false;
+
+	//Reset input
+	Edit_enc_sK->Text = "";
+	Edit_VigenereKey->Text = "";
+	Edit_d->Text = "";
+	Edit_n->Text = "";
+
+	//Reset input image box
+	Image_Input->Picture = NULL;
+
+	//Reset output image box
+	Image_Output->Picture = NULL;
+
+	//Reset DBgrid
+	ClientDataSet1->Active = true;
+	ClientDataSet2->Active = true;
+	if(ClientDataSet1->CanModify && ClientDataSet2->CanModify) {
+			ClientDataSet1->EmptyDataSet();
+			ClientDataSet2->EmptyDataSet();
+	}
+
+	//Reset Calc. box
+    Edit_sK->Text = "";
+	Edit_InvsK->Text = "";
+	Memo_VkDebug->Clear();
+	Memo_VkDebug->Lines->Add("Track Vigenere Key");
+
+	Label_ms->Caption = "";
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_BrowseImageClick(TObject *Sender)
+{
+    OpenPictureDialog1->Filter = "BMP files (*.bmp)|*.bmp";
+	if (OpenPictureDialog1->Execute()) {
+		try{
+            TBitmap *bmp = new TBitmap();
+			bmp->LoadFromFile(OpenPictureDialog1->FileName);
+			Image_Width = bmp->Width;
+            Image_Height = bmp->Height;
+
+            TJPEGImage *jpg = new TJPEGImage();
+            jpg->Assign(bmp); // Convert BMP to JPEG
+
+            // Optional: Adjust JPEG quality for speed/size tradeoff
+            jpg->CompressionQuality = 80; // Adjust as needed (0-100)
+
+            TMemoryStream *jpgStream = new TMemoryStream();
+			jpg->SaveToStream(jpgStream);
+			jpgStream->Position = 0; // Reset stream position
+
+			TJPEGImage *displayJpeg = new TJPEGImage();
+			displayJpeg->LoadFromStream(jpgStream);
+
+			Image_Input->Picture->Assign(displayJpeg); // Display JPEG in TImage
+
+			ClientDataSet1->DisableControls();
+			ClientDataSet1->EmptyDataSet();
+
+			for (int y = 0; y < bmp->Height; y++) {
+				for (int x = 0; x < bmp->Width; x++){
+					TColor pixelColor = bmp->Canvas->Pixels[x][y];
+					int r = GetRValue(pixelColor);
+					int g = GetGValue(pixelColor);
+					int b = GetBValue(pixelColor);
+
+					ClientDataSet1->Append();
+					ClientDataSet1->FieldByName("X")->AsInteger = x;
+					ClientDataSet1->FieldByName("Y")->AsInteger = y;
+					ClientDataSet1->FieldByName("R")->AsInteger = r;
+					ClientDataSet1->FieldByName("G")->AsInteger = g;
+					ClientDataSet1->FieldByName("B")->AsInteger = b;
+					ClientDataSet1->Post();
+				}
+			}
+			ClientDataSet1->EnableControls();
+
+			delete bmp;
+            delete jpg;
+			delete jpgStream;
+			delete displayJpeg;
+		}
+		catch (Exception &E){
+            ShowMessage("Error: " + E.Message);
+        }
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_SaveImageClick(TObject *Sender)
+{
+    if (SavePictureDialog1->Execute()) {
+		String fileName = SavePictureDialog1->FileName;
+		String fileExt = "";
+
+		//Determine the selected filter index and append the correct extension
+		switch (SavePictureDialog1->FilterIndex) {
+            case 1: // BMP
+                fileExt = ".bmp";
+                break;
+            case 2: // JPEG
+                fileExt = ".jpg";
+                break;
+            case 3: // PNG
+                fileExt = ".png";
+                break;
+            case 4: // GIF
+                fileExt = ".gif";
+				break;
+			default:
+                fileExt = ".bmp"; // Default to BMP if no filter is selected.
+                break;
+        }
+
+        // Check if the filename already has an extension
+        if (ExtractFileExt(fileName).IsEmpty()) {
+            fileName += fileExt; // Append the extension
+        }
+
+		try {
+            Image_OutputSave->Picture->SaveToFile(fileName);
+            ShowMessage("Image saved to " + fileName);
+        }
+		catch (Exception &E) {
+            ShowMessage("Error saving image: " + E.Message);
+        }
+    }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_CalculationClick(TObject *Sender)
+{
+    SaveDialog_Calculation->Title = "Save Calculation File";
+    SaveDialog_Calculation->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+	SaveDialog_Calculation->DefaultExt = ".txt";
+
+	if (SaveDialog_Calculation->Execute()) {
+		String filePath = SaveDialog_Calculation->FileName.c_str();
+
+		ofstream keyFile(filePath.c_str());
+
+		if (keyFile.is_open()) {
+			keyFile << "===== Calculation =====" << endl;
+			keyFile << "sK = " << AnsiString(Edit_sK->Text.c_str()) << endl;
+			keyFile << "Inv(sK) = " << AnsiString(Edit_InvsK->Text.c_str()) << endl;
+			keyFile << "Vk = " << endl;
+			keyFile << AnsiString(Memo_VkDebug->Lines->Text.c_str()) << endl << endl;
+			keyFile.close();
+
+			ShowMessage("Calculation saved to " + String(filePath.c_str()));
+		} else {
+			ShowMessage("Error opening file!");
+		}
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm_Main::SpeedButton_DecryptClick(TObject *Sender)
+{
+    //Validation
+	if (Edit_enc_sK->Text.IsEmpty() || Edit_VigenereKey->Text.IsEmpty() || Edit_d->Text.IsEmpty() || Edit_n->Text.IsEmpty()) {
+			ShowMessage("Please fill in all input key fields!");
+			return;
+	}
+
+	//Read only input
+	Edit_enc_sK->ReadOnly = true;
+	Edit_VigenereKey->ReadOnly = true;
+	Edit_d->ReadOnly = true;
+	Edit_n->ReadOnly = true;
+
+	//Get the input key parameter
+	__int64 sK = StrToInt64(Edit_enc_sK->Text);
+	String Vs = Edit_VigenereKey->Text;
+	__int64 d = StrToInt64(Edit_d->Text);
+	__int64 n = StrToInt64(Edit_n->Text);
+
+	//Decrypting sK
+	sK = ModPow(sK, d, n);
+
+	//Validating sK
+	if (sK == 0) {
+		ShowMessage("Error: sK is zero. Division by zero avoided.");
+		ClientDataSet2->EnableControls();
+		return;
+	}
+
+	if (ClientDataSet1->RecordCount > 0)
+	{
+		try {
+			//Get Start Time
+			__int64 startTime = GetTickCount64();
+
+			//Calculayeing inverse of sK in mod 256
+			__int64 InvsK = ModInverse(sK, 256);
+
+			Edit_InvsK->Text = IntToStr(InvsK);
+
+			//Generate Vk
+			int NumOfPix =  ClientDataSet1->RecordCount + 1;
+			String Vk = GenerateVk(Vs, NumOfPix);
+
+			//Setup Progress Bar
+			ProgressBar1->Visible = true;
+			ProgressBar1->Max = ClientDataSet1->RecordCount; //Total steps
+			ProgressBar1->Position = 0;
+
+			//Set the output RGB table
+			ClientDataSet2->DisableControls();
+			ClientDataSet2->EmptyDataSet();
+
+			ClientDataSet1->First();
+			int VkIndex = 1; //Index to track Vigenere key characters
+			while (!ClientDataSet1->Eof) {
+				int x = ClientDataSet1->FieldByName("X")->AsInteger;
+				int y = ClientDataSet1->FieldByName("Y")->AsInteger;
+				int r = ClientDataSet1->FieldByName("R")->AsInteger;
+				int g = ClientDataSet1->FieldByName("G")->AsInteger;
+				int b = ClientDataSet1->FieldByName("B")->AsInteger;
+
+				//Encryption Vigenere-multiplicative
+				char VkChar = Vk[VkIndex % Vk.Length()]; // Get character from Vigenere key
+				int VkValue = (int)VkChar; // Convert character to integer
+
+				//Debug, tracking index
+				Memo_VkDebug->Lines->Add("(" + AnsiString(x) + ", " + AnsiString(y) + "), " + AnsiString(VkIndex) + ", " + AnsiString(VkChar));
+
+				int encrypted_r = (InvsK * (r - VkValue)) % 256; //Modulo 256 to keep within RGB range
+				int encrypted_g = (InvsK * (g - VkValue)) % 256;
+				int encrypted_b = (InvsK * (b - VkValue)) % 256;
+
+
+				ClientDataSet2->Append();
+				ClientDataSet2->FieldByName("X")->AsInteger = x;
+				ClientDataSet2->FieldByName("Y")->AsInteger = y;
+				ClientDataSet2->FieldByName("R")->AsInteger = encrypted_r;
+				ClientDataSet2->FieldByName("G")->AsInteger = encrypted_g;
+				ClientDataSet2->FieldByName("B")->AsInteger = encrypted_b;
+				ClientDataSet2->Post();
+
+				//Update Progress Bar
+                ProgressBar1->Position++;
+				Application->ProcessMessages(); //Keep UI responsive
+
+				ClientDataSet1->Next(); //Next record
+				VkIndex++;
+			}
+
+            //Get End Time
+			__int64 endTime = GetTickCount64();
+
+			ClientDataSet2->EnableControls();
+
+			//Display the encrypted image in Image_Output
+			TBitmap *decryptedImg = new TBitmap();
+			decryptedImg->Width = Image_Width;
+			decryptedImg->Height = Image_Height;
+
+			ClientDataSet2->First();
+			while (!ClientDataSet2->Eof) {
+				int x = ClientDataSet2->FieldByName("X")->AsInteger;
+				int y = ClientDataSet2->FieldByName("Y")->AsInteger;
+				TColor pixelColor = (TColor) RGB(ClientDataSet2->FieldByName("R")->AsInteger,
+									   ClientDataSet2->FieldByName("G")->AsInteger,
+									   ClientDataSet2->FieldByName("B")->AsInteger);
+				decryptedImg->Canvas->Pixels[x][y] = pixelColor;
+				ClientDataSet2->Next();
+			}
+
+			//Save as BMP to Image_OutputSaveBMP (hidden)
+			Image_OutputSave->Picture->Assign(decryptedImg);
+
+
+
+			//Calculate Elapsed Time
+			__int64 elapsedTime = endTime - startTime;
+
+			//Display Elapsed Time
+			Label_ms->Caption = IntToStr(elapsedTime) + " ms";
+
+			//Hide Progress Bar
+			ProgressBar1->Visible = false;
+
+			//Display as jpg
+			TJPEGImage *jpg = new TJPEGImage();
+			jpg->Assign(decryptedImg);
+			jpg->CompressionQuality = 80;
+			Image_Output->Picture->Assign(jpg);
+			Image_Output->Proportional = true;
+
+			delete decryptedImg;
+			delete jpg;
+
+			SpeedButton_Decrypt->Enabled = false;
+			ShowMessage("Image decrypted");
+		}
+		catch (Exception &E) {
+			ShowMessage("Error: " + E.Message);
+		}
+	}
+	else {
+        ShowMessage("Please load an image first.");
+    }
+}
+//---------------------------------------------------------------------------
+
+
+

@@ -1,0 +1,8 @@
+===== Input Key =====
+p1 = 47
+p2 = 53
+q1 = 71
+q2 = 97
+x = 137
+y = 46
+Vigenere Key = key

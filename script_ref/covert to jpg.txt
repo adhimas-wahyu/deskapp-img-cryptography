@@ -1,0 +1,15 @@
+#include <jpeg.hpp>
+
+void ConvertBMPtoJPEG(String BMPFileName, String JPEGFileName) {
+    TBitmap *bmp = new TBitmap();
+    TJPEGImage *jpg = new TJPEGImage();
+    try {
+        bmp->LoadFromFile(BMPFileName);
+        jpg->Assign(bmp);
+        jpg->CompressionQuality = 80; // Adjust quality (0-100)
+        jpg->SaveToFile(JPEGFileName);
+    } __finally {
+        delete jpg;
+        delete bmp;
+    }
+}
